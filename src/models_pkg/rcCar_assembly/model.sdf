@@ -1,0 +1,451 @@
+<?xml version='1.0'?>
+<sdf version='1.6'>
+  <model name='automobile'>
+    <include>
+      <uri>model://chassis</uri>
+      <pose>0 0 0 0 0 0</pose>
+    </include>
+    <!-- including a left rear wheel -->
+    <include>
+      <uri>model://wheel_left</uri>
+      <pose>-0.152 0.081 0 0 0 0</pose>
+      <name>wheel_rear_left</name>
+    </include>
+    <!-- including a front rear wheel -->
+    <include>
+      <uri>model://wheel_right</uri>
+      <pose>-0.152 -0.081 0 0 0 0</pose>
+      <name>wheel_rear_right</name>
+    </include>
+    <!-- including a left steering comp. -->
+    <include>
+      <uri>model://steering_column</uri>
+      <pose>0.112 0.0725 0 0 0 0</pose>
+      <name>steer_left</name>
+    </include>
+    <!-- including a right steering comp. -->
+    <include>
+      <uri>model://steering_column</uri>
+      <pose>0.112 -0.0725 0 0 0 0</pose>
+      <name>steer_right</name>
+    </include>
+    <!-- including a left front wheel -->
+    <include>
+      <uri>model://wheel_left</uri>
+      <pose>0.118 0.081 0 0 0 0</pose>
+      <name>wheel_front_left</name>
+    </include>
+    <!-- including a right front wheel -->
+    <include>
+      <uri>model://wheel_right</uri>
+      <pose>0.118 -0.081 0 0 0 0</pose>
+      <name>wheel_front_right</name>
+    </include>
+    
+    <!-- including the camera link -->
+    <!-- 0.261799388 -->
+    <include>
+      <uri>model://camera</uri>
+      <pose>0 0 0.2 0 0.2617 0</pose>
+      <name>camera</name>
+    </include>
+
+    <!-- Real sensor/compute deck (LiDAR + ZED camera + Jetson), scaled to fit this chassis.
+         Visual only - no collision, so it doesn't affect physics. -->
+    <link name='sensor_deck_link'>
+      <pose>0 0 0.0 0 0 0</pose>
+      <inertial>
+        <mass>0.05</mass>
+        <inertia>
+          <ixx>0.0001</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.0001</iyy>
+          <iyz>0</iyz>
+          <izz>0.0001</izz>
+        </inertia>
+      </inertial>
+      <visual name='sensor_deck_visual'>
+        <pose>-0.086674 0.059558 -0.036109 1.570796 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://car_body/meshes/SensorDeck.stl</uri>
+            <scale>0.00065 0.00065 0.00065</scale>
+          </mesh>
+        </geometry>
+        <material>
+          <ambient>0.16 0.18 0.23 1</ambient>
+          <diffuse>0.27 0.30 0.37 1</diffuse>
+          <specular>0.3 0.3 0.3 1</specular>
+          <emissive>0 0 0 1</emissive>
+        </material>
+      </visual>
+    </link>
+
+    <!-- RPLidar 2D Laser Scanner -->
+    <link name='lidar_link'>
+      <pose>0 0 0.15 0 0 0</pose>
+      <inertial>
+        <mass>0.1</mass>
+        <inertia>
+          <ixx>0.0001</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.0001</iyy>
+          <iyz>0</iyz>
+          <izz>0.0001</izz>
+        </inertia>
+      </inertial>
+      <collision name='lidar_collision'>
+        <geometry>
+          <cylinder>
+            <radius>0.035</radius>
+            <length>0.04</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <sensor name='rplidar' type='ray'>
+        <pose>0 0 0 0 0 0</pose>
+        <visualize>false</visualize>
+        <update_rate>10</update_rate>
+        <ray>
+          <scan>
+            <horizontal>
+              <samples>360</samples>
+              <resolution>1</resolution>
+              <min_angle>-3.14159</min_angle>
+              <max_angle>3.14159</max_angle>
+            </horizontal>
+          </scan>
+          <range>
+            <min>0.15</min>
+            <max>12.0</max>
+            <resolution>0.01</resolution>
+          </range>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.01</stddev>
+          </noise>
+        </ray>
+        <plugin name='gazebo_ros_laser' filename='libgazebo_ros_ray_sensor.so'>
+          <ros>
+            <namespace>/</namespace>
+            <remapping>~/out:=scan</remapping>
+          </ros>
+          <output_type>sensor_msgs/LaserScan</output_type>
+          <frame_name>base_link</frame_name>
+        </plugin>
+      </sensor>
+    </link>
+
+    <!-- LIST OF JOINTS -->
+    <joint name='joint_leftrear_rim' type='revolute'>
+      <parent>chassis::link</parent>
+      <child>wheel_rear_left::link_rim</child>
+      <pose frame=''>0 0 0 0 -0 0</pose>
+      <axis>
+        <xyz>0 0 -1</xyz>
+        <use_parent_model_frame>0</use_parent_model_frame>
+        <limit>
+          <lower>-1.79769e+308</lower>
+          <upper>1.79769e+308</upper>
+          <effort>-1</effort>
+          <velocity>-1</velocity>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+          <damping>0</damping>
+          <friction>0</friction>
+        </dynamics>
+      </axis>
+      <physics>
+        <ode>
+          <limit>
+            <cfm>0</cfm>
+            <erp>0.2</erp>
+          </limit>
+          <suspension>
+            <cfm>0</cfm>
+            <erp>0.2</erp>
+          </suspension>
+        </ode>
+      </physics>
+    </joint>
+
+    <joint name='joint_rightrear_rim' type='revolute'>
+      <parent>chassis::link</parent>
+      <child>wheel_rear_right::link_rim</child>
+      <pose frame=''>0 0 0 0 -0 0</pose>
+      <axis>
+        <xyz>0 0 -1</xyz>
+        <use_parent_model_frame>0</use_parent_model_frame>
+        <limit>
+          <lower>-1.79769e+308</lower>
+          <upper>1.79769e+308</upper>
+          <effort>-1</effort>
+          <velocity>-1</velocity>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+          <damping>0</damping>
+          <friction>0</friction>
+        </dynamics>
+      </axis>
+      <physics>
+        <ode>
+          <limit>
+            <cfm>0</cfm>
+            <erp>0.2</erp>
+          </limit>
+          <suspension>
+            <cfm>0</cfm>
+            <erp>0.2</erp>
+          </suspension>
+        </ode>
+      </physics>
+    </joint>
+    
+    <!-- Front right joint between the chassis and the steering comp. -->
+    <joint name='joint_leftfront_steer' type='revolute'>
+      <parent>chassis::link</parent>
+      <child>steer_left::link_steer</child>
+      <pose frame=''>0 0 0.005 0 -0 0</pose>
+      <axis>
+        <xyz>0 1 0</xyz>
+        <use_parent_model_frame>0</use_parent_model_frame>
+        <limit>
+          <lower>-1.79769e+308</lower>
+          <upper>1.79769e+308</upper>
+          <effort>-1</effort>
+          <velocity>-1</velocity>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+          <damping>0</damping>
+          <friction>0</friction>
+        </dynamics>
+      </axis>
+      <physics>
+        <ode>
+          <limit>
+            <cfm>0</cfm>
+            <erp>0.2</erp>
+          </limit>
+          <suspension>
+            <cfm>0</cfm>
+            <erp>0.2</erp>
+          </suspension>
+        </ode>
+      </physics>
+    </joint>
+    <!-- Front left joint between the chassis and the steering comp. -->
+    <joint name='joint_rightfront_steer' type='revolute'>
+      <parent>chassis::link</parent>
+      <child>steer_right::link_steer</child>
+      <pose frame=''>0 0 -0.005 0 -0 0</pose>
+      <axis>
+        <xyz>0 1 0</xyz>
+        <use_parent_model_frame>0</use_parent_model_frame>
+        <limit>
+          <lower>-1.79769e+308</lower>
+          <upper>1.79769e+308</upper>
+          <effort>-1</effort>
+          <velocity>-1</velocity>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+          <damping>0</damping>
+          <friction>0</friction>
+        </dynamics>
+      </axis>
+      <physics>
+        <ode>
+          <limit>
+            <cfm>0</cfm>
+            <erp>0.2</erp>
+          </limit>
+          <suspension>
+            <cfm>0</cfm>
+            <erp>0.2</erp>
+          </suspension>
+        </ode>
+      </physics>
+    </joint>
+
+    <!-- Right joint between the steering and the rim   -->
+    <joint name='joint_rightfront_rim' type='revolute'>
+      <parent>steer_right::link_steer</parent>
+      <child>wheel_front_right::link_rim</child>
+      <pose frame=''>0 0 0 0 -0 0</pose>
+      <axis>
+        <xyz>0 0 -1</xyz>
+        <use_parent_model_frame>0</use_parent_model_frame>
+        <limit>
+          <lower>-1.79769e+308</lower>
+          <upper>1.79769e+308</upper>
+          <effort>-1</effort>
+          <velocity>-1</velocity>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+          <damping>0</damping>
+          <friction>0</friction>
+        </dynamics>
+      </axis>
+      <physics>
+        <ode>
+          <limit>
+            <cfm>0</cfm>
+            <erp>0.2</erp>
+          </limit>
+          <suspension>
+            <cfm>0</cfm>
+            <erp>0.2</erp>
+          </suspension>
+        </ode>
+      </physics>
+    </joint>
+
+    <!-- Left joint between the steering and the rim   -->
+    <joint name='joint_leftfront_rim' type='revolute'>
+      <parent>steer_left::link_steer</parent>
+      <child>wheel_front_left::link_rim</child>
+      <pose frame=''>0 0 0 0 -0 0</pose>
+      <axis>
+        <xyz>0 0 -1</xyz>
+        <use_parent_model_frame>0</use_parent_model_frame>
+        <limit>
+          <lower>-1.79769e+308</lower>
+          <upper>1.79769e+308</upper>
+          <effort>-1</effort>
+          <velocity>-1</velocity>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+          <damping>0</damping>
+          <friction>0</friction>
+        </dynamics>
+      </axis>
+      <physics>
+        <ode>
+          <limit>
+            <cfm>0</cfm>
+            <erp>0.2</erp>
+          </limit>
+          <suspension>
+            <cfm>0</cfm>
+            <erp>0.2</erp>
+          </suspension>
+        </ode>
+      </physics>
+    </joint>
+
+    <!-- fixed joint for the sensor/compute deck -->
+    <joint name='joint_sensor_deck' type='fixed'>
+      <parent>chassis::link</parent>
+      <child>sensor_deck_link</child>
+      <pose frame=''>0 0 0 0 -0 0</pose>
+      <physics>
+        <ode>
+          <limit>
+            <cfm>0</cfm>
+            <erp>0.2</erp>
+          </limit>
+          <suspension>
+            <cfm>0</cfm>
+            <erp>0.2</erp>
+          </suspension>
+        </ode>
+      </physics>
+    </joint>
+
+
+    <!-- fixed joint for the camera -->
+    <joint name='joint_camera' type='fixed'>
+      <parent>chassis::link</parent>
+      <child>camera::link_camera</child>
+      <pose frame=''>0 0 0 0 -0 0</pose>
+      <physics>
+        <ode>
+          <limit>
+            <cfm>0</cfm>
+            <erp>0.2</erp>
+          </limit>
+          <suspension>
+            <cfm>0</cfm>
+            <erp>0.2</erp>
+          </suspension>
+        </ode>
+      </physics>
+    </joint>
+
+    <!-- fixed joint for the lidar -->
+    <joint name='joint_lidar' type='fixed'>
+      <parent>chassis::link</parent>
+      <child>lidar_link</child>
+      <pose frame=''>0 0 0 0 -0 0</pose>
+      <physics>
+        <ode>
+          <limit>
+            <cfm>0</cfm>
+            <erp>0.2</erp>
+          </limit>
+          <suspension>
+            <cfm>0</cfm>
+            <erp>0.2</erp>
+          </suspension>
+        </ode>
+      </physics>
+    </joint>
+
+    <!-- Plugin  -->
+    <plugin name='CarLikeRobotPlugin' filename='libcar_plugin.so'>
+      <wheelbase>0.26</wheelbase>
+      <axletrack>0.162</axletrack>
+      <wheelradius>0.0325</wheelradius>
+      <speed_wheel_joints> 
+        <front_wheel_joints>
+          <leftjoint>joint_leftfront_rim</leftjoint>
+          <rightjoint>joint_rightfront_rim</rightjoint>
+        </front_wheel_joints>
+        <rear_wheel_joints>
+          <leftjoint>joint_leftrear_rim</leftjoint>
+          <rightjoint>joint_rightrear_rim</rightjoint>
+        </rear_wheel_joints>
+        <kp>0.01</kp>
+        <ki>0.0</ki>
+        <kd>0.0</kd>
+      </speed_wheel_joints>
+      <steer_wheel_joints>
+        <leftjoint>joint_leftfront_steer</leftjoint>
+        <rightjoint>joint_rightfront_steer</rightjoint>
+        <kp>10</kp>
+        <ki>0.0</ki>
+        <kd>0.1</kd>
+      </steer_wheel_joints>
+      <initial_steer>0.0</initial_steer>
+      <initial_speed>0.0</initial_speed>
+      <robotNamespace>/</robotNamespace>
+      <!-- Real car control topics -->
+      <speed_topic>/commands/motor/speed</speed_topic>
+      <steer_topic>/commands/servo/position</steer_topic>
+      <!-- Real car mapping parameters -->
+      <speed_to_ms_gain>4000.0</speed_to_ms_gain>
+      <steer_to_rad_gain>-0.6</steer_to_rad_gain>
+      <steer_to_rad_offset>0.5</steer_to_rad_offset>
+      <odom_topic>/pf/pose/odom</odom_topic>
+    </plugin>
+
+    <plugin name='bno055' filename='libbno055_plugin.so'> </plugin>
+    <plugin name='gps' filename='libgps_plugin.so'> </plugin>
+
+
+  </model>
+</sdf>

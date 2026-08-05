@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ 
+<launch>
+  <!-- Launch the Gazebo simulation environment with the custom map world -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name"   value="$(find sim_pkg)/worlds/my_map_world.world"/>
+    <arg name="paused"       value="false"/>    
+    <arg name="use_sim_time" value="true"/>
+    <arg name="debug"        value="false"/>
+    <arg name="gui"          value="true"/>
+  </include>
+ 
+  <!-- Spawn the car with a delay to ensure Gazebo is ready -->
+  <node pkg="sim_pkg" type="delay.sh" args="5 sim_pkg car.launch" name="car" output="screen"/>
+  
+</launch>

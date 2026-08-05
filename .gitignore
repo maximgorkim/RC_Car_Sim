@@ -1,0 +1,20 @@
+# ROS 2 / colcon output
+build/
+install/
+log/
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Editor and OS files
+.vscode/
+.idea/
+.DS_Store
+*~
+
+# Local environment files
+.env
+.env.*
+!.env.example
