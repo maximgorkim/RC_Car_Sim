@@ -87,6 +87,8 @@
   "_source": "Yaw-rate residual of the steering model below 5 Hz: car 0.0327 (pp) / 0.0340 (irl) rad/s, car-like Gazebo without disturbance 0.0152 / 0.0162: excess sqrt(0.0333^2 - 0.0157^2) = 0.0294 rad/s, spectrally flat over 0.3-5 Hz (~1.1e-4 (rad/s)^2/Hz), NOT explained by command-derived features (rate, sign of motion, |delta|, v, accel: R^2 0.03 irl / 0.16 pp) -> a random disturbance; as steering at 0.9 m/s: 0.0294 * 0.28 / 0.9 = 0.0092 rad below 5 Hz. Above 5 Hz the car's residual (0.046-0.055 rad/s) is at the IMU vibration level, so the disturbance must roll off: OU (tau 0.032 s = 1/(2 pi 5 Hz)) followed by a first-order low-pass with the same tau; 81.8 % of its variance is below 5 Hz, in-band std 0.640 sigma. Gazebo's gain from this steering input to the yaw rate, measured with a first-order OU (sigma 0.0129): in-band excess 0.0362 vs 0.0294 expected -> 1.23; sigma = 0.0092 / 1.23 / 0.640 = 0.0116 rad. Steering vs yaw-rate disturbance is not separable at the single speed of the bags.",
   "steer_ou_sigma_rad": 0.0116,
   "steer_ou_tau_s": 0.032,
-  "steer_lowpass_tau_s": 0.032
+  "steer_lowpass_tau_s": 0.032,
+  "gazebo_gain": 1.23,
+  "_gazebo_gain": "Gazebo's measured gain from this steering disturbance to the yaw rate (in-band); a plant without Gazebo (RC_Car_Codes car_like_plant.py) multiplies sigma by it."
  }
 }
