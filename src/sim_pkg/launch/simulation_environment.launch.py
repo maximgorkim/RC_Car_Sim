@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, TimerAction, DeclareLaunchArgument
+from launch.actions import (IncludeLaunchDescription, TimerAction, DeclareLaunchArgument, OpaqueFunction,
+                            SetEnvironmentVariable, UnsetEnvironmentVariable)
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
@@ -30,6 +31,22 @@ def generate_launch_description():
     
     # Launch arguments
     gui_arg = DeclareLaunchArgument('gui', default_value='true')
+    # vehicle:=car -> car_plugin's car-like mode: the real car's identified actuators and
+    # sensors (car_plugin/config/car_like.json, sources inside); vehicle:=ideal -> the
+    # original model. The plugin reads CAR_LIKE_CONFIG from gzserver's environment.
+    vehicle_arg = DeclareLaunchArgument('vehicle', default_value='ideal', description='ideal | car')
+    car_like_arg = DeclareLaunchArgument(
+        'car_like_config',
+        default_value=os.path.join(get_package_share_directory('car_plugin'), 'config', 'car_like.json'),
+        description='vehicle:=car only: car-like parameter file')
+
+    def vehicle_env(context):
+        vehicle = LaunchConfiguration('vehicle').perform(context)
+        if vehicle == 'car':
+            return [SetEnvironmentVariable('CAR_LIKE_CONFIG', LaunchConfiguration('car_like_config').perform(context))]
+        if vehicle == 'ideal':
+            return [UnsetEnvironmentVariable('CAR_LIKE_CONFIG')]
+        raise RuntimeError(f"vehicle:={vehicle}: expected 'ideal' or 'car'")
     
     # Gazebo launch
     gazebo = IncludeLaunchDescription(
@@ -60,4 +77,4 @@ def generate_launch_description():
         )]
     )
     
-    return LaunchDescription([gui_arg, gazebo, car])
+    return LaunchDescription([gui_arg, vehicle_arg, car_like_arg, OpaqueFunction(function=vehicle_env), gazebo, car])

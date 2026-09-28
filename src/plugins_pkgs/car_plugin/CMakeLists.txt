@@ -12,6 +12,7 @@ find_package(gazebo_ros REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(gazebo REQUIRED)
@@ -20,18 +21,21 @@ link_directories(${GAZEBO_LIBRARY_DIRS})
 
 include_directories(include ${GAZEBO_INCLUDE_DIRS})
 
-add_library(car_plugin SHARED src/carlikerobot_ros_plugin.cpp src/carlikerobot.cpp)
+add_library(car_plugin SHARED src/carlikerobot_ros_plugin.cpp src/carlikerobot.cpp src/car_like.cpp)
 
 ament_target_dependencies(car_plugin
   gazebo_ros
   rclcpp
   std_msgs
   nav_msgs
+  sensor_msgs
   geometry_msgs
   tf2_ros
 )
 
 target_link_libraries(car_plugin ${GAZEBO_LIBRARIES})
+
+install(DIRECTORY config DESTINATION share/${PROJECT_NAME})
 
 install(TARGETS car_plugin
   ARCHIVE DESTINATION lib

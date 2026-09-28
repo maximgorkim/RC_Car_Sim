@@ -1,0 +1,88 @@
+{
+ "_about": "Car-like mode of car_plugin (include/car_like.hpp). Every value is MEASURED on the real car; sources per block. Identification: RC_Car_Codes src/integral_rl_controller/scripts/identify_car_dynamics.py on bags fair_bags/fair_pp_1 + fair_irl_1 (2026-09-28) -> results/identification/car_model.json, which reproduces every value below (script output, not hand-copied). Enable: ros2 launch sim_pkg simulation_environment.launch.py vehicle:=car",
+ "seed": 1,
+ "command": {
+  "_source": "erpm_per_mps / servo_per_rad: the controller's real.speed_cmd_per_mps / real.servo_per_rad (controller.yaml). pose_per_vesc: calibrate_from_bag.py pose/VESC distance ratio on straights, 1.044 (pp) / 1.039 (irl). speed_*: car_model.json speed (fit on both bags; cross-validated 0.050-0.077 m/s). steer_*: car_model.json steering (fit on both bags; cross-validated 0.059-0.074 rad/s vs 0.089-0.144 without the model).",
+  "erpm_per_mps": 2171.0,
+  "pose_per_vesc": 1.04,
+  "speed_gain": 1.005,
+  "speed_delay_s": 0.18,
+  "speed_tau_s": 0.25,
+  "servo_center": 0.5,
+  "servo_per_rad": 0.929,
+  "steer_delay_s": 0.04,
+  "steer_tau_s": 0.04,
+  "steer_map_cmd_rad": [
+   -0.32,
+   -0.2,
+   -0.1,
+   0.0,
+   0.1,
+   0.2,
+   0.32
+  ],
+  "steer_map_eff_rad": [
+   -0.314,
+   -0.217,
+   -0.092,
+   -0.008,
+   0.089,
+   0.204,
+   0.347
+  ],
+  "model_wheelbase_m": 0.28,
+  "_closure": "steer_delay_s is the car's 0.05 s minus Gazebo's own 0.01 s: identify_car_dynamics.py on car-like Gazebo bags (sim_car_like pp_1 + irl_1, first version) recovered 0.06 s with 0.05 s configured; lag (0.04 s), speed dynamics (0.44 vs 0.43 s total) and latency (0.2025 vs 0.200 s) were recovered."
+ },
+ "gazebo": {
+  "_source": "Effective wheelbase of this Gazebo model at the car's speeds: closure test -- with 0.2727 m (gazebo_model.json, identified on earlier Gazebo logs) the car-like bags re-identified a steering map 4.6 % stronger than the car's at every knot (1.040-1.054): 0.2727 / 1.046 = 0.2607 m (the SDF wheelbase is 0.26). Wheel-speed lag 0.041 s (gazebo_model.json).",
+  "wheelbase_eff_m": 0.2607,
+  "speed_tau_s": 0.041
+ },
+ "pose": {
+  "_source": "car_model.json pose: 8.28 Hz; heading latency behind the IMU 0.170 (pp) / 0.200 (irl) s; heading bias = course - PF heading on straights, +2.53 / +2.62 deg in all four travel directions. Noise: second-difference structure function Var(e[k+j]-2e[k]+e[k-j]), j = 1..6 samples, of PF minus IMU+VESC dead reckoning (0.185 s latency) on straight runs (|mean yaw rate| < 0.3 rad/s), both bags jointly, OU + white fit (second differences cancel offsets and linear drift, so neither dead-reckoning drift nor latency jitter in curves enters). Lateral: white 0.0127 m + a slow part whose diffusion rate sigma^2/T = 3.1e-4 m^2/s is identified but whose time constant is not (lags <= 0.72 s): T = 5 s (sigma 0.039 m) is bounded by the 8-s-window lateral std (<= 0.05-0.06 m, an upper bound: includes DR drift). Longitudinal: OU 0.065 m / 0.22 s (large: along-track is weakly constrained by the lidar in straight corridors). Heading: white; the joint fit gives 0.0072 rad (OU time constant 0.08 s < one sample) with |yaw rate| < 0.3 rad/s, where latency jitter still enters; on strict straights (|yaw rate| < 0.08 rad/s) the model-free PF heading second difference is 0.0118 (pp) / 0.0110 (irl) rad = sqrt(6) sigma + motion (0.0022 in Gazebo) -> sigma 0.0047 rad (used). Method check on a Gazebo bag with known noise: white components and total heading variance recovered within 5 %.",
+  "_timing": "Latency: heading lag behind the IMU, 0.200 s with the IRL controller on the Jetson (fair_irl_1), 0.170 s with pure pursuit (fair_pp_1): the localisation shares the CPU with the controller; 0.200 is the IRL condition. Timing: PF intervals mean 119.0 / 118.1 ms, std 21.3 / 23.7 ms, lag-1 autocorrelation -0.30 / -0.34 (lag 2: 0.00): interval = T + eta_i + xi_(i+1) - xi_i with scan-period jitter eta and publication-delay jitter xi: var = 2 var(xi) + var(eta), cov1 = -var(xi) -> std(xi) 12.7 ms, std(eta) 13.5 ms.",
+  "topic": "/pf/pose/odom",
+  "rate_hz": 8.44,
+  "period_jitter_s": 0.0135,
+  "latency_s": 0.2,
+  "latency_jitter_s": 0.0127,
+  "heading_bias_rad": 0.045,
+  "lateral": {
+   "ou_sigma_m": 0.039,
+   "ou_tau_s": 5.0,
+   "white_m": 0.0127
+  },
+  "longitudinal": {
+   "ou_sigma_m": 0.065,
+   "ou_tau_s": 0.21,
+   "white_m": 0.0
+  },
+  "heading": {
+   "ou_sigma_rad": 0.0,
+   "ou_tau_s": 1.0,
+   "white_rad": 0.0047
+  }
+ },
+ "imu": {
+  "_source": "ZED2 IMU 196.5-196.9 Hz; yaw-rate content above 10 Hz while driving 0.046 (pp) / 0.051 (irl) rad/s (vibration; 0.011-0.013 at standstill); bias at standstill |0.0002| rad/s (neglected).",
+  "topic": "/zed2/zed_node/imu/data",
+  "rate_hz": 197.0,
+  "gyro_std_radps": 0.049
+ },
+ "vesc": {
+  "_source": "/sensors/core 50.0 Hz. Published as std_msgs/Float64 ERPM; RC_Car_Codes sim_vesc_bridge republishes vesc_msgs/VescStateStamped on /sensors/core.",
+  "topic": "/sim/vesc/erpm",
+  "rate_hz": 50.0
+ },
+ "ground_truth": {
+  "_source": "true pose/twist of the same point (evaluation only; the car has no such topic)",
+  "topic": "/sim/ground_truth/odom",
+  "rate_hz": 50.0
+ },
+ "disturbance": {
+  "_source": "Yaw-rate residual of the steering model below 5 Hz: car 0.0327 (pp) / 0.0340 (irl) rad/s, car-like Gazebo without disturbance 0.0152 / 0.0162: excess sqrt(0.0333^2 - 0.0157^2) = 0.0294 rad/s, spectrally flat over 0.3-5 Hz (~1.1e-4 (rad/s)^2/Hz), NOT explained by command-derived features (rate, sign of motion, |delta|, v, accel: R^2 0.03 irl / 0.16 pp) -> a random disturbance; as steering at 0.9 m/s: 0.0294 * 0.28 / 0.9 = 0.0092 rad below 5 Hz. Above 5 Hz the car's residual (0.046-0.055 rad/s) is at the IMU vibration level, so the disturbance must roll off: OU (tau 0.032 s = 1/(2 pi 5 Hz)) followed by a first-order low-pass with the same tau; 81.8 % of its variance is below 5 Hz, in-band std 0.640 sigma. Gazebo's gain from this steering input to the yaw rate, measured with a first-order OU (sigma 0.0129): in-band excess 0.0362 vs 0.0294 expected -> 1.23; sigma = 0.0092 / 1.23 / 0.640 = 0.0116 rad. Steering vs yaw-rate disturbance is not separable at the single speed of the bags.",
+  "steer_ou_sigma_rad": 0.0116,
+  "steer_ou_tau_s": 0.032,
+  "steer_lowpass_tau_s": 0.032
+ }
+}
