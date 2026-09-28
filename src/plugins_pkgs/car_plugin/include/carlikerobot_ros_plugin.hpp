@@ -100,6 +100,7 @@ namespace gazebo
                 double _clLast = -1.0, _deltaState = 0.0, _speedState = 0.0, _steerDist = 0.0;
                 double _nextScan = 0.0, _nextImu = 0.0, _nextVesc = 0.0, _nextTruth = 0.0, _lastScan = -1.0, _lastPub = -1.0;
                 std::deque<PendingPose> _pending;
+                std::deque<TruthXY> _xyHist;
                 OuNoise _nLat, _nLon, _nHdg, _nSteer;
                 std::mt19937 _clRng;
                 rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr _imuPub;

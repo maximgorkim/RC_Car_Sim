@@ -360,8 +360,8 @@ namespace gazebo
             double servo = _cl.servo_center, erpm = 0.0;
             {
                 std::lock_guard<std::mutex> lk(_cmdMutex);
-                _servoQ.at(now - _cl.steer_delay, servo);
-                _erpmQ.at(now - _cl.speed_delay, erpm);
+                _servoQ.at(now - _cl.compute_delay - _cl.steer_delay, servo);
+                _erpmQ.at(now - _cl.compute_delay - _cl.speed_delay, erpm);
             }
             const double deltaCmd = (servo - _cl.servo_center) / _cl.servo_per_rad;
             const double vCmd = _cl.speed_gain * erpm / _cl.erpm_per_mps * _cl.pose_per_vesc;
@@ -429,6 +429,10 @@ namespace gazebo
                 t.twist.twist.angular.z = angVel.Z();
                 _truthPub->publish(t);
             }
+            _xyHist.push_back({now, pose.Pos().X(), pose.Pos().Y()});
+            while (_xyHist.size() > 2 && _xyHist[1].t < now - _cl.pose_position_extra_latency - 0.05)
+                _xyHist.pop_front();
+
             // localisation: a scan every 1/rate (+ period jitter); its pose is the true pose at
             // the scan instant plus noise, published latency (+ jitter) later, in order
             if (now >= _nextScan)
@@ -437,9 +441,26 @@ namespace gazebo
                 const double dts = _lastScan < 0 ? 1.0 / _cl.pose_rate : now - _lastScan;
                 _lastScan = now;
                 const double eLat = _nLat.step(dts, _clRng), eLon = _nLon.step(dts, _clRng), eHdg = _nHdg.step(dts, _clRng);
+                // position older than the heading by position_extra_latency (measured on the car)
+                double px = pose.Pos().X(), py = pose.Pos().Y();
+                const double tq = now - _cl.pose_position_extra_latency;
+                if (_cl.pose_position_extra_latency > 0 && !_xyHist.empty() && _xyHist.front().t <= tq)
+                {
+                    size_t i = 0;
+                    while (i + 1 < _xyHist.size() && _xyHist[i + 1].t <= tq)
+                        ++i;
+                    px = _xyHist[i].x;
+                    py = _xyHist[i].y;
+                    if (i + 1 < _xyHist.size())
+                    {
+                        const double w = (tq - _xyHist[i].t) / std::max(_xyHist[i + 1].t - _xyHist[i].t, 1e-9);
+                        px += w * (_xyHist[i + 1].x - px);
+                        py += w * (_xyHist[i + 1].y - py);
+                    }
+                }
                 PendingPose p;
-                p.x = pose.Pos().X() + eLon * std::cos(yaw) - eLat * std::sin(yaw);
-                p.y = pose.Pos().Y() + eLon * std::sin(yaw) + eLat * std::cos(yaw);
+                p.x = px + eLon * std::cos(yaw) - eLat * std::sin(yaw);
+                p.y = py + eLon * std::sin(yaw) + eLat * std::cos(yaw);
                 p.yaw = yaw - _cl.pose_heading_bias + eHdg;   // measured: course - PF heading = heading_bias
                 p.pub = std::max(now + std::max(_cl.pose_latency + _cl.pose_latency_jitter * n01(_clRng), 0.0),
                                  _pending.empty() ? _lastPub : _pending.back().pub);

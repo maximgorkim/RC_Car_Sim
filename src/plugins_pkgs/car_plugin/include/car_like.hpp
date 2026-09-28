@@ -43,6 +43,8 @@ namespace gazebo
             std::string pose_topic, imu_topic, vesc_topic, truth_topic;
             double pose_rate = 0, pose_latency = 0, pose_heading_bias = 0;
             double pose_period_jitter = 0, pose_latency_jitter = 0;   // s (std): scan period, publication delay
+            double pose_position_extra_latency = 0;   // s: position older than the heading
+            double compute_delay = 0;                 // s: controller, pose arrival -> command (added to both commands)
             double lat_ou_sigma = 0, lat_ou_tau = 1, lat_white = 0;
             double lon_ou_sigma = 0, lon_ou_tau = 1, lon_white = 0;
             double hdg_ou_sigma = 0, hdg_ou_tau = 1, hdg_white = 0;
@@ -99,5 +101,6 @@ namespace gazebo
 
         // A pose sampled at the scan instant, published at `pub` (scan + latency + jitter).
         struct PendingPose { double pub, x, y, yaw; };
+        struct TruthXY { double t, x, y; };
     }
 }

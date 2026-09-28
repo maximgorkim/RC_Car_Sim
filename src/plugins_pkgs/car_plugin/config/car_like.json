@@ -31,7 +31,9 @@
    0.347
   ],
   "model_wheelbase_m": 0.28,
-  "_closure": "steer_delay_s is the car's 0.05 s minus Gazebo's own 0.01 s: identify_car_dynamics.py on car-like Gazebo bags (sim_car_like pp_1 + irl_1, first version) recovered 0.06 s with 0.05 s configured; lag (0.04 s), speed dynamics (0.44 vs 0.43 s total) and latency (0.2025 vs 0.200 s) were recovered."
+  "_closure": "steer_delay_s is the car's 0.05 s minus Gazebo's own 0.01 s: identify_car_dynamics.py on car-like Gazebo bags (sim_car_like pp_1 + irl_1, first version) recovered 0.06 s with 0.05 s configured; lag (0.04 s), speed dynamics (0.44 vs 0.43 s total) and latency (0.2025 vs 0.200 s) were recovered.",
+  "compute_delay_s": 0.014,
+  "_compute_delay": "Controller on the Jetson: pose arrival -> /irl/state (the pose stamp is in /irl/state) in fair_irl_1: mean 13.9 ms, median 11.6, p90 25.8 ms (Gazebo: 0.7 ms); no command used a stale pose. Added before both command dead times (which start at the command's publication)."
  },
  "gazebo": {
   "_source": "Effective wheelbase of this Gazebo model at the car's speeds: closure test -- with 0.2727 m (gazebo_model.json, identified on earlier Gazebo logs) the car-like bags re-identified a steering map 4.6 % stronger than the car's at every knot (1.040-1.054): 0.2727 / 1.046 = 0.2607 m (the SDF wheelbase is 0.26). Wheel-speed lag 0.041 s (gazebo_model.json).",
@@ -61,7 +63,9 @@
    "ou_sigma_rad": 0.0,
    "ou_tau_s": 1.0,
    "white_rad": 0.0047
-  }
+  },
+  "position_extra_latency_s": 0.04,
+  "_position_latency": "Position latency measured separately from the heading latency: PF lateral position vs IMU+VESC dead reckoning of the PF point (lever arm 0.17 m) on straights, band 0.3-1.5 Hz, lag of maximum correlation per straight run: fair_irl_1 0.239 +- 0.011 s (9 runs, corr 0.94) vs heading 0.20 s -> position 0.04 s older than the heading. Method check on car-like Gazebo bags with 0.200 s: 0.186 / 0.213 / 0.218 s (unbiased). fair_pp_1 has too little lateral motion in that band (corr 0.62)."
  },
  "imu": {
   "_source": "ZED2 IMU 196.5-196.9 Hz; yaw-rate content above 10 Hz while driving 0.046 (pp) / 0.051 (irl) rad/s (vibration; 0.011-0.013 at standstill); bias at standstill |0.0002| rad/s (neglected).",

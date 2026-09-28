@@ -102,6 +102,8 @@ namespace gazebo
                 num(d, "pose.heading_bias_rad", c.pose_heading_bias, err) &&
                 num(d, "pose.period_jitter_s", c.pose_period_jitter, err) &&
                 num(d, "pose.latency_jitter_s", c.pose_latency_jitter, err) &&
+                num(d, "pose.position_extra_latency_s", c.pose_position_extra_latency, err) &&
+                num(d, "command.compute_delay_s", c.compute_delay, err) &&
                 num(d, "pose.lateral.ou_sigma_m", c.lat_ou_sigma, err) &&
                 num(d, "pose.lateral.ou_tau_s", c.lat_ou_tau, err) &&
                 num(d, "pose.lateral.white_m", c.lat_white, err) &&
