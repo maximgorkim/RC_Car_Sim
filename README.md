@@ -3,6 +3,17 @@
 ROS 2 and Gazebo simulation workspace for an RC car, including the vehicle model,
 custom map, sensors, traffic lights, and supporting plugins.
 
+> **Fork of [memre12/RC_Car_Sim](https://github.com/memre12/RC_Car_Sim)** by
+> Mehmet Emre Demir ([@memre12](https://github.com/memre12)), who built the
+> simulation and its car-like mode. This fork only adds an optional
+> `clock_rate` launch argument (branch `car-like-mode`): Gazebo's default 10 Hz
+> `/clock` quantizes every sensor stamp to 0.1 s, which breaks the EKF's delay
+> compensation in [RC_Car_Codes](https://github.com/maximgorkim/RC_Car_Codes/tree/feature/ekf-localization).
+>
+> ```bash
+> ros2 launch sim_pkg simulation_environment.launch.py vehicle:=car clock_rate:=1000
+> ```
+
 ## Build and run
 
 ```bash
