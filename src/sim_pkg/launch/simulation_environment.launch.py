@@ -48,16 +48,22 @@ def generate_launch_description():
             return [UnsetEnvironmentVariable('CAR_LIKE_CONFIG')]
         raise RuntimeError(f"vehicle:={vehicle}: expected 'ideal' or 'car'")
     
-    # Gazebo launch
-    gazebo = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(gazebo_launch),
-        launch_arguments={
-            'world': world_file,
-            'verbose': 'false',
-            'gui': LaunchConfiguration('gui'),
-            'pause': 'false'
-        }.items()
-    )
+    # clock_rate:=<Hz> -> /clock published at that rate (gazebo_ros default: 10 Hz). Every
+    # plugin stamps its messages with the ROS clock, so with 10 Hz all sensor stamps are
+    # quantized to 0.1 s (e.g. 95 % of the 200 Hz IMU messages share a stamp); timing-
+    # sensitive consumers (EKF delay compensation, controller latency models) need ~1000.
+    clock_rate_arg = DeclareLaunchArgument('clock_rate', default_value='',
+                                           description='Hz of /clock; empty = gazebo_ros default (10)')
+
+    def gazebo_include(context):
+        args = {'world': world_file, 'verbose': 'false', 'gui': LaunchConfiguration('gui'), 'pause': 'false'}
+        rate = LaunchConfiguration('clock_rate').perform(context)
+        if rate:
+            params = f'/tmp/gazebo_clock_{rate}.yaml'
+            with open(params, 'w') as f:
+                f.write(f'gazebo:\n  ros__parameters:\n    publish_rate: {float(rate)}\n')
+            args['params_file'] = params
+        return [IncludeLaunchDescription(PythonLaunchDescriptionSource(gazebo_launch), launch_arguments=args.items())]
     
     # Spawn the car with a delay
     car = TimerAction(
@@ -77,4 +83,5 @@ def generate_launch_description():
         )]
     )
     
-    return LaunchDescription([gui_arg, vehicle_arg, car_like_arg, OpaqueFunction(function=vehicle_env), gazebo, car])
+    return LaunchDescription([gui_arg, vehicle_arg, car_like_arg, clock_rate_arg, OpaqueFunction(function=vehicle_env),
+                              OpaqueFunction(function=gazebo_include), car])
